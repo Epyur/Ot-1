@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "37d89d9a-286b-4955-82f0-d32935c96134",
+    "lastName": "Полищук",
+    "firstName": "Евгений",
+    "patronymic": "Юрьевич",
+    "birthDate": "1983-05-05",
+    "phone": "+79055081921",
+    "email": "epyur@ya.ru",
+    "organization": "ООО \"ТН\"",
+    "createdAt": "2026-07-07T19:00:51.809Z"
+  }
+]
