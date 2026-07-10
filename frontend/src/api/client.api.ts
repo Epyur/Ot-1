@@ -10,7 +10,20 @@ const api = axios.create({
   },
 });
 
+export interface IQuestion {
+  name: string;
+  label: string;
+  type: string;
+  required: boolean;
+  placeholder: string;
+}
+
+export async function getQuestions(): Promise<IQuestion[]> {
+  const response = await api.get("/question");
+  return response.data;
+}
+
 export async function submitSurvey(data: IAnswerInput): Promise<{ id: string; message: string }> {
-  const response = await api.post("/survey", data);
+  const response = await api.post("/answers", data);
   return response.data;
 }

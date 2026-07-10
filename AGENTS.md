@@ -41,7 +41,8 @@ Ot-1/
 │   │   ├── index.ts            # ✅ Точка входа (dotenv + запуск сервера)
 │   │   ├── server.ts           # ✅ Express app (CORS, JSON, роуты, ошибки)
 │   │   ├── routes/
-│   │   │   ├── survey.routes.ts   # ✅ POST /api/survey
+│   │   │   ├── question.routes.ts # ✅ GET /api/question
+│   │   │   ├── survey.routes.ts   # ✅ POST /api/answers
 │   │   │   └── admin.routes.ts    # ✅ GET /api/admin/responses, GET /api/admin/export
 │   │   ├── controllers/
 │   │   │   ├── survey.controller.ts  # ✅ Валидация Zod, возврат 201
@@ -79,7 +80,7 @@ Ot-1/
 │   │   │   ├── FormInput.tsx       # ✅ Переиспользуемый input
 │   │   │   └── SurveyTable.tsx     # ✅ Таблица данных
 │   │   ├── api/
-│   │   │   ├── client.api.ts       # ✅ POST /api/survey
+│   │   │   ├── client.api.ts       # ✅ GET /api/question + POST /api/answers
 │   │   │   └── admin.api.ts        # ✅ GET /api/admin/responses + export
 │   │   ├── hooks/
 │   │   │   └── useAuth.ts          # ✅ Управление токеном (localStorage)
@@ -129,7 +130,8 @@ Ot-1/
 
 | Метод | Путь | Роль | Описание |
 |-------|------|------|----------|
-| POST | `/api/survey` | Заказчик | Сохранение анкеты в JSON-файл |
+| GET | `/api/question` | Заказчик | Получение списка вопросов анкеты |
+| POST | `/api/answers` | Заказчик | Отправка заполненной анкеты |
 | GET | `/api/admin/responses` | Сотрудник | Получение всех записей (JSON) |
 | GET | `/api/admin/export` | Сотрудник | Скачивание Excel-файла |
 
@@ -148,11 +150,12 @@ Ot-1/
 | **0. Подготовка окружения** | ✅ | Структура папок, docker-compose.yml, .env.example, сеть app-network |
 | **1. Backend — JSON-хранилище** | ✅ | jsonStorage.ts: readData, writeData, addRecord, автосоздание файла |
 | **2. Backend — API и валидация** | ✅ | Zod-валидация, survey.controller, admin.controller, auth middleware, error middleware |
-| **3. Frontend — форма заказчика** | ✅ | ClientForm.tsx, FormInput.tsx, валидация, отправка, сообщения об успехе/ошибке |
+| **3. Frontend — форма заказчика** | ✅ | ClientForm.tsx, динамическая загрузка вопросов с API, FormInput.tsx, валидация, отправка, сообщения об успехе/ошибке |
 | **4. Frontend — дашборд сотрудника** | ✅ | AdminDashboard.tsx, SurveyTable.tsx, useAuth.ts, Excel-выгрузка |
-| **5. Интеграция с Nginx** | ✅ | Dockerfile для всех сервисов, nginx.conf reverse proxy |
+| **5. Интеграция с Nginx** | ✅ | Dockerfile для всех сервисов, nginx.conf reverse proxy, единая точка входа |
+| **6. Исправление API (code review)** | ✅ | Добавлен GET /api/question, POST /api/answers, динамическая загрузка вопросов, убраны лишние порты |
 
-### ⏳ Ожидает выполнения (Этапы 6–7)
+### ⏳ Ожидает выполнения (Этапы 7)
 
 | Этап | Статус | Описание |
 |------|--------|----------|

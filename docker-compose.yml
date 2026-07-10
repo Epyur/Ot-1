@@ -6,8 +6,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: survey-backend
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     volumes:
       - ./backend/data:/app/data
     env_file:
@@ -21,8 +21,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: survey-frontend
-    ports:
-      - "3000:80"
+    expose:
+      - "80"
     networks:
       - app-network
     restart: unless-stopped

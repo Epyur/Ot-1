@@ -63,9 +63,9 @@ docker-compose up -d
 
 ### Что произойдёт:
 
-1. **Backend** — Node.js 20 сервер на порту 5000
-2. **Frontend** — React статика через nginx:alpine на порту 80
-3. **Nginx** — Reverse proxy на порту 8080 (единая точка входа)
+1. **Backend** — Node.js 20 сервер (внутренний порт 5000, непубличный)
+2. **Frontend** — React статика через nginx:alpine (внутренний порт 80, непубличный)
+3. **Nginx** — Reverse proxy на порту 8080 (единственная публичная точка входа)
 
 ---
 
@@ -89,8 +89,8 @@ docker-compose ps
 ```
      Name                    Command               State          Ports
 -------------------------------------------------------------------------------------
-survey-backend    docker-entrypoint.sh node ...   Up      0.0.0.0:5000->5000/tcp
-survey-frontend   /docker-entrypoint.sh ngin ...   Up      0.0.0.0:3000->80/tcp
+survey-backend    docker-entrypoint.sh node ...   Up      5000/tcp
+survey-frontend   /docker-entrypoint.sh ngin ...   Up      80/tcp
 survey-nginx      /docker-entrypoint.sh ngin ...   Up      0.0.0.0:8080->80/tcp
 ```
 
@@ -275,15 +275,19 @@ ports:
 
 | Метод | Путь | Заголовки | Описание |
 |-------|------|-----------|----------|
-| POST | `/api/survey` | — | Сохранение анкеты |
+| GET | `/api/question` | — | Получение списка вопросов анкеты |
+| POST | `/api/answers` | — | Отправка заполненной анкеты |
 | GET | `/api/admin/responses` | `X-Admin-Token: <token>` | Получение всех записей |
 | GET | `/api/admin/export` | `X-Admin-Token: <token>` | Скачивание Excel |
 
 Пример запроса через curl:
 
 ```bash
+# Получение вопросов
+curl http://localhost:8080/api/question
+
 # Отправка анкеты
-curl -X POST http://localhost:8080/api/survey \
+curl -X POST http://localhost:8080/api/answers \
   -H "Content-Type: application/json" \
   -d '{
     "lastName": "Иванов",

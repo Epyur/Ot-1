@@ -1,37 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormInput } from "../components/FormInput";
-import { submitSurvey } from "../api/client.api";
+import { getQuestions, submitSurvey, IQuestion } from "../api/client.api";
 import { validateEmail, validatePhone, validateBirthDate, validateRequired } from "../utils/validation";
 
 interface FormErrors {
-  lastName?: string;
-  firstName?: string;
-  birthDate?: string;
-  phone?: string;
-  email?: string;
-  organization?: string;
+  [key: string]: string | undefined;
 }
 
-const initialFormState = {
-  lastName: "",
-  firstName: "",
-  patronymic: "",
-  birthDate: "",
-  phone: "",
-  email: "",
-  organization: "",
-};
-
 export function ClientForm() {
-  const [form, setForm] = useState(initialFormState);
+  const [questions, setQuestions] = useState<IQuestion[]>([]);
+  const [form, setForm] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [serverMessage, setServerMessage] = useState("");
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    getQuestions()
+      .then((data) => {
+        setQuestions(data);
+        const initial: Record<string, string> = {};
+        data.forEach((q) => { initial[q.name] = ""; });
+        setForm(initial);
+      })
+      .catch(() => setLoadError("Не удалось загрузить вопросы анкеты"));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
+    if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
@@ -39,12 +37,17 @@ export function ClientForm() {
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!validateRequired(form.lastName)) newErrors.lastName = "Фамилия обязательна";
-    if (!validateRequired(form.firstName)) newErrors.firstName = "Имя обязательно";
-    if (!validateBirthDate(form.birthDate)) newErrors.birthDate = "Формат: ГГГГ-ММ-ДД";
-    if (!validatePhone(form.phone)) newErrors.phone = "Телефон обязателен";
-    if (!validateEmail(form.email)) newErrors.email = "Некорректный email";
-    if (!validateRequired(form.organization)) newErrors.organization = "Организация обязательна";
+    questions.forEach((q) => {
+      if (q.name === "email" && form[q.name]) {
+        if (!validateEmail(form[q.name])) newErrors[q.name] = "Некорректный email";
+      } else if (q.name === "phone" && form[q.name]) {
+        if (!validatePhone(form[q.name])) newErrors[q.name] = "Телефон обязателен";
+      } else if (q.name === "birthDate" && form[q.name]) {
+        if (!validateBirthDate(form[q.name])) newErrors[q.name] = "Формат: ГГГГ-ММ-ДД";
+      } else if (q.required && !validateRequired(form[q.name] || "")) {
+        newErrors[q.name] = `${q.label} обязательна`;
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,10 +59,12 @@ export function ClientForm() {
 
     setStatus("loading");
     try {
-      const result = await submitSurvey(form);
+      const result = await submitSurvey(form as unknown as import("../types/survey.types").IAnswerInput);
       setStatus("success");
       setServerMessage(result.message);
-      setForm(initialFormState);
+      const cleared: Record<string, string> = {};
+      questions.forEach((q) => { cleared[q.name] = ""; });
+      setForm(cleared);
     } catch (err: unknown) {
       setStatus("error");
       if (err && typeof err === "object" && "response" in err) {
@@ -78,17 +83,31 @@ export function ClientForm() {
     }
   };
 
+  if (loadError) {
+    return <div className="container"><div className="error-message">{loadError}</div></div>;
+  }
+
+  if (questions.length === 0) {
+    return <div className="container"><div className="loading">Загрузка вопросов...</div></div>;
+  }
+
   return (
     <div className="container">
       <h1>Анкета заказчика</h1>
       <form onSubmit={handleSubmit} className="survey-form">
-        <FormInput label="Фамилия" name="lastName" value={form.lastName} onChange={handleChange} error={errors.lastName} required placeholder="Иванов" />
-        <FormInput label="Имя" name="firstName" value={form.firstName} onChange={handleChange} error={errors.firstName} required placeholder="Иван" />
-        <FormInput label="Отчество" name="patronymic" value={form.patronymic} onChange={handleChange} placeholder="Иванович" />
-        <FormInput label="Дата рождения" name="birthDate" type="date" value={form.birthDate} onChange={handleChange} error={errors.birthDate} required />
-        <FormInput label="Телефон" name="phone" value={form.phone} onChange={handleChange} error={errors.phone} required placeholder="+7-999-123-45-67" />
-        <FormInput label="Email" name="email" type="email" value={form.email} onChange={handleChange} error={errors.email} required placeholder="ivan@example.com" />
-        <FormInput label="Организация" name="organization" value={form.organization} onChange={handleChange} error={errors.organization} required placeholder="ООО Ромашка" />
+        {questions.map((q) => (
+          <FormInput
+            key={q.name}
+            label={q.label}
+            name={q.name}
+            type={q.type}
+            value={form[q.name] || ""}
+            onChange={handleChange}
+            error={errors[q.name]}
+            required={q.required}
+            placeholder={q.placeholder}
+          />
+        ))}
 
         <button type="submit" disabled={status === "loading"} className="submit-btn">
           {status === "loading" ? "Отправка..." : "Отправить анкету"}

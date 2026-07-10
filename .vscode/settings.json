@@ -1,0 +1,5 @@
+{
+    "continue.enableConsole": true,
+    "continue.enableQuickActions": true,
+    "continue.pauseCodebaseIndexOnStart": false
+}
